@@ -79,9 +79,20 @@ button (`panelContent.pricing` → point `SidePanel`'s `more` at another sheet).
 
 ### 5. Forms — `formStrings` and `src/app/api/contact/route.ts`
 
-The contact and brief sheets post to `/api/contact`. Right now the route just validates,
-logs the submission and returns `{ ok: true }` — **wire it to email or a webhook** (Resend,
-Telegram bot, Discord, …) before shipping.
+The contact and brief sheets post to `/api/contact`, which delivers each submission to a
+Discord channel webhook (including the brief's screenshots as attachments).
+
+Setup:
+
+1. In Discord: **Channel settings → Integrations → Webhooks → New Webhook → Copy Webhook URL**.
+2. Put it in `.env.local` (gitignored):
+   ```bash
+   DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
+   ```
+3. Restart `npm run dev`, or add the same variable in your host's dashboard when deploying.
+
+If the variable is missing the route returns a 500 and logs the reason; it never falls back
+to silently dropping submissions.
 
 ### 6. Images and social cards
 
