@@ -103,7 +103,7 @@ export const caseStudyContent: CaseStudyContent = {
   meta: {
     title: "Before and after",
     headline: "Static screen to living interface",
-    description: "Replace this with a description of the case study shown on this page"
+    description: "A before-and-after look at how FoodLoop AI and DelveDeep turned static screens into living interfaces through visual craft, motion, and interaction polish."
   },
   panel: {
     title: ["Static screen to", "living interface"],
