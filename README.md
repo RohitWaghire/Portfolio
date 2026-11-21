@@ -79,20 +79,27 @@ button (`panelContent.pricing` → point `SidePanel`'s `more` at another sheet).
 
 ### 5. Forms — `formStrings` and `src/app/api/contact/route.ts`
 
-The contact and brief sheets post to `/api/contact`, which delivers each submission to a
-Discord channel webhook (including the brief's screenshots as attachments).
+The contact and brief sheets post to `/api/contact`, which delivers each submission to its
+own Discord channel (the brief includes screenshots as attachments):
+
+| Form | Env var |
+| --- | --- |
+| "Start a project" contact sheet | `DISCORD_WEBHOOK_CONTACT_URL` |
+| "Project brief" sheet | `DISCORD_WEBHOOK_BRIEF_URL` |
 
 Setup:
 
-1. In Discord: **Channel settings → Integrations → Webhooks → New Webhook → Copy Webhook URL**.
-2. Put it in `.env.local` (gitignored):
+1. In Discord: **Channel settings → Integrations → Webhooks → New Webhook → Copy Webhook URL**
+   in each channel.
+2. Put both in `.env.local` (gitignored):
    ```bash
-   DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
+   DISCORD_WEBHOOK_CONTACT_URL=https://discord.com/api/webhooks/...
+   DISCORD_WEBHOOK_BRIEF_URL=https://discord.com/api/webhooks/...
    ```
-3. Restart `npm run dev`, or add the same variable in your host's dashboard when deploying.
+3. Restart `npm run dev`, or add the same variables in your host's dashboard when deploying.
 
-If the variable is missing the route returns a 500 and logs the reason; it never falls back
-to silently dropping submissions.
+If a webhook is missing the route returns a 500 and logs which one; it never falls back to
+silently dropping submissions.
 
 ### 6. Images and social cards
 

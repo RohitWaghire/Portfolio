@@ -3,10 +3,11 @@ import { NextRequest, NextResponse } from 'next/server';
 export const runtime = 'nodejs';
 
 /**
- * Contact + brief submissions are delivered to a Discord channel through a
- * webhook. Set DISCORD_WEBHOOK_URL in .env.local (never commit it).
+ * Contact and brief submissions go to separate Discord channels. Set both
+ * webhook URLs in .env.local (never commit them).
  */
-const WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;
+const CONTACT_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_CONTACT_URL;
+const BRIEF_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_BRIEF_URL;
 const MAX_ATTACHMENT_BYTES = 7 * 1024 * 1024; // Discord allows 8 MB per request
 
 type Submission = {
@@ -60,14 +61,6 @@ function rateLimited(key: string) {
 
 export async function POST(req: NextRequest) {
   try {
-    if (!WEBHOOK_URL) {
-      console.error('[contact] DISCORD_WEBHOOK_URL is not set');
-      return NextResponse.json(
-        { ok: false, error: 'Contact form is not configured' },
-        { status: 500 }
-      );
-    }
-
     const body = (await req.json()) as Submission;
 
     // Honeypot
@@ -104,6 +97,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { ok: false, error: 'Missing required fields' },
         { status: 400 }
+      );
+    }
+
+    const webhookUrl = isBrief ? BRIEF_WEBHOOK_URL : CONTACT_WEBHOOK_URL;
+    if (!webhookUrl) {
+      console.error(
+        `[contact] ${isBrief ? 'DISCORD_WEBHOOK_BRIEF_URL' : 'DISCORD_WEBHOOK_CONTACT_URL'} is not set`
+      );
+      return NextResponse.json(
+        { ok: false, error: 'Contact form is not configured' },
+        { status: 500 }
       );
     }
 
@@ -192,12 +196,12 @@ export async function POST(req: NextRequest) {
       files.forEach((file, index) => {
         form.append(`files[${index}]`, file.blob, file.name);
       });
-      response = await fetch(`${WEBHOOK_URL}?wait=true`, {
+      response = await fetch(`${webhookUrl}?wait=true`, {
         method: 'POST',
         body: form
       });
     } else {
-      response = await fetch(`${WEBHOOK_URL}?wait=true`, {
+      response = await fetch(`${webhookUrl}?wait=true`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
