@@ -1,0 +1,651 @@
+/* ==========================================================================
+   THEME — light glass + electric blue
+   --------------------------------------------------------------------------
+   `globals.css` is the prebuilt stylesheet that came with the template. It is
+   dark and its colours are mostly hardcoded, so this file re-skins it:
+
+     · design tokens from the palette are declared on :root
+     · the template's own variables (--color-ink, --color-text, --color-line,
+       --color-ember, …) are mapped onto the new palette, so anything driven by
+       variables — body, text-muted/faint, the glow colours, the animated border
+       — follows automatically
+     · the custom classes that hardcode dark values (.shell, .bar, .sidebar,
+       .tile, .plan, .button-*, .pill-field, .flow-border, .glow-text) are
+       re-declared here
+     · a handful of dark-only utility classes used by the components are
+       remapped at the bottom of the file
+
+   This file is imported after globals.css and is deliberately unlayered, so it
+   wins over the @layer utilities/theme rules in globals.css regardless of order.
+   ========================================================================== */
+
+:root {
+  /* 1. Typography & neutrals (Ink) */
+  --ink: #12161d;
+  --ink-2: #3a4656;
+  --ink-3: #5c6779;
+  --ink-4: #808b9c;
+
+  /* 2. Primary accent (Electric Blue) */
+  --blue: #0084ff;
+  --blue-deep: #0074e0;
+  --blue-ink: #0a4d8f;
+  --blue-soft: rgba(0, 132, 255, 0.12);
+  --blue-line: rgba(0, 132, 255, 0.28);
+
+  /* 3. Glass surfaces & borders */
+  --ground: #ffffff;
+  --panel: rgba(255, 255, 255, 0.55);
+  --panel-raised: rgba(255, 255, 255, 0.82);
+  --line: rgba(18, 22, 29, 0.08);
+  --line-strong: rgba(18, 22, 29, 0.14);
+  --glass-blur: 28px;
+
+  /* 4. Ambient glows & brand accent */
+  --glow-a: #60b1ff;
+  --glow-b: #319aff;
+  --star: #ff801e;
+
+  /* 5. Semantic feedback */
+  --ok: #0f8a5f;
+  --ok-ink: #0b6b4a;
+  --ok-soft: rgba(15, 138, 95, 0.1);
+  --warn: #b45309;
+  --warn-ink: #8a3f07;
+  --warn-soft: rgba(180, 83, 9, 0.1);
+  --danger: #d92d20;
+  --danger-ink: #a51f15;
+  --danger-soft: rgba(217, 45, 32, 0.08);
+
+  /* --- template variables mapped onto the palette --- */
+  color-scheme: light;
+
+  --color-ink: var(--ink);
+  --color-text: var(--ink);
+  --color-muted: var(--ink-3);
+  --color-faint: var(--ink-4);
+  --color-line: var(--line);
+  --color-glow: var(--blue);
+  --color-ember: var(--blue-deep);
+  --color-flame: var(--glow-a);
+  --color-core: #ffffff;
+  --color-danger: var(--danger);
+
+  /* the rotating conic gradient behind the flame border */
+  --flow-colors: #dceeff, #60b1ff, #0084ff, #bfe1ff, #0074e0, #8cc8ff, #dceeff;
+}
+
+/* --------------------------------------------------------------------------
+   Page ground + ambient background glows
+   -------------------------------------------------------------------------- */
+html {
+  background: var(--ground);
+}
+
+body {
+  background: var(--ground);
+  color: var(--ink);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: -12%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(46rem 34rem at 7% 5%, rgba(96, 177, 255, 0.62), transparent 62%),
+    radial-gradient(34rem 26rem at 19% 27%, rgba(49, 154, 255, 0.34), transparent 66%),
+    radial-gradient(30rem 24rem at 74% 3%, rgba(96, 177, 255, 0.28), transparent 68%),
+    radial-gradient(32rem 26rem at 88% 92%, rgba(0, 132, 255, 0.16), transparent 70%),
+    radial-gradient(22rem 18rem at 78% 6%, rgba(255, 128, 30, 0.1), transparent 70%);
+  filter: blur(90px);
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: -6%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(28rem 22rem at 20% 12%, rgba(96, 177, 255, 0.34), transparent 65%),
+    radial-gradient(24rem 18rem at 12% 38%, rgba(49, 154, 255, 0.2), transparent 68%);
+  filter: blur(80px);
+}
+
+/* --------------------------------------------------------------------------
+   Side panel — liquid glass
+   -------------------------------------------------------------------------- */
+.sidebar {
+  /* one side's horizontal padding — used to size the avatar to half the panel */
+  --side-pad: 1.5rem;
+  background-image: none;
+  background-color: var(--panel);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.5);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.5);
+  box-shadow:
+    inset -1px 0 0 var(--line),
+    1px 0 0 rgba(255, 255, 255, 0.7),
+    24px 0 60px -34px rgba(18, 22, 29, 0.22);
+}
+
+@media (max-width: 1023px) {
+  .sidebar {
+    box-shadow:
+      inset 0 1px 0 var(--line),
+      0 -1px 0 rgba(255, 255, 255, 0.7),
+      0 -18px 44px -26px rgba(18, 22, 29, 0.22);
+  }
+}
+
+@media (min-width: 64rem) {
+  .sidebar {
+    --side-pad: 2.5rem;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Sheets, project cards, floating bars
+   -------------------------------------------------------------------------- */
+.shell {
+  background-color: var(--panel-raised);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.5);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.5);
+  box-shadow:
+    inset 0 1px 0 #ffffff,
+    0 0 0 1px var(--line),
+    0 40px 90px -44px rgba(18, 22, 29, 0.35);
+}
+
+.bar {
+  background-color: rgba(255, 255, 255, 0.72);
+  color: var(--ink);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  backdrop-filter: blur(20px) saturate(1.4);
+  box-shadow:
+    inset 0 0 0 1px var(--line-strong),
+    0 12px 30px -18px rgba(18, 22, 29, 0.28);
+}
+
+.tile {
+  background-color: rgba(255, 255, 255, 0.66);
+  box-shadow:
+    0 0 0 1px rgba(18, 22, 29, 0.1),
+    inset 0 1px 0 #ffffff,
+    0 22px 50px -32px rgba(18, 22, 29, 0.4);
+}
+
+.plan {
+  background-image: none;
+  background-color: rgba(255, 255, 255, 0.7);
+  box-shadow:
+    inset 0 1px 0 #ffffff,
+    0 0 0 1px var(--line),
+    0 18px 40px -28px rgba(18, 22, 29, 0.3);
+}
+
+/* --------------------------------------------------------------------------
+   Buttons
+   -------------------------------------------------------------------------- */
+.button-cream {
+  color: #ffffff;
+}
+
+.button-cream:before {
+  background-image: linear-gradient(180deg, var(--blue) 0%, var(--blue-deep) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -1px 0 rgba(4, 48, 92, 0.35),
+    0 0 0 1px rgba(0, 84, 180, 0.5),
+    0 10px 24px -14px rgba(0, 132, 255, 0.7);
+}
+
+.button-quiet {
+  color: var(--ink);
+  background-image: none;
+  background-color: rgba(255, 255, 255, 0.72);
+  box-shadow:
+    inset 0 0 0 1px var(--line-strong),
+    inset 0 1px 0 #ffffff,
+    0 8px 18px -14px rgba(18, 22, 29, 0.35);
+}
+
+.button-quiet:hover:not(:disabled) {
+  background-image: none;
+  background-color: rgba(255, 255, 255, 0.94);
+}
+
+.button-lit {
+  color: #ffffff;
+}
+
+.button-lit:before {
+  background-image: linear-gradient(180deg, var(--blue) 0%, var(--blue-deep) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 0 0 1px rgba(0, 84, 180, 0.45),
+    0 10px 26px -14px rgba(0, 132, 255, 0.6);
+}
+
+/* --------------------------------------------------------------------------
+   Inputs
+   -------------------------------------------------------------------------- */
+.pill-field {
+  background-image: none;
+  background-color: var(--panel-raised);
+  box-shadow:
+    inset 0 0 0 1px var(--line-strong),
+    inset 0 1px 0 #ffffff;
+}
+
+.pill-field:hover {
+  box-shadow:
+    inset 0 0 0 1px rgba(18, 22, 29, 0.22),
+    inset 0 1px 0 #ffffff;
+}
+
+.pill-field:focus-within,
+.pill-field:focus {
+  box-shadow:
+    inset 0 0 0 1px var(--blue),
+    0 0 0 3px var(--blue-soft);
+}
+
+/* --------------------------------------------------------------------------
+   Featured plan border + headline glow
+   -------------------------------------------------------------------------- */
+.flow-border {
+  background:
+    linear-gradient(#ffffff, #ffffff) padding-box,
+    linear-gradient(135deg, var(--blue-line), rgba(96, 177, 255, 0.6)) border-box;
+  box-shadow:
+    inset 0 2px 1px -1px #ffffff,
+    0 0 0 1px var(--line),
+    0 30px 70px -46px rgba(18, 22, 29, 0.35);
+}
+
+.glow-text {
+  background-image: linear-gradient(
+    100deg,
+    #60b1ff 0%,
+    #0084ff 22%,
+    #8ecbff 40%,
+    #0a4d8f 58%,
+    #60b1ff 76%,
+    #0084ff 100%
+  );
+  filter:
+    drop-shadow(0 0 7px rgba(96, 177, 255, 0.45))
+    drop-shadow(0 0 22px rgba(0, 132, 255, 0.28));
+}
+
+/* --------------------------------------------------------------------------
+   Small helpers used by the components
+   -------------------------------------------------------------------------- */
+.link-ink {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(18, 22, 29, 0.35);
+  transition: color 0.2s;
+}
+
+.link-ink:hover {
+  color: var(--blue-deep);
+  text-decoration-color: var(--blue-line);
+}
+
+.text-ink {
+  color: var(--ink);
+}
+
+.text-blue {
+  color: var(--blue-deep);
+}
+
+.text-success {
+  color: var(--ok-ink);
+}
+
+.glass-tint {
+  background-color: var(--blue-soft);
+}
+
+.glass-tint-strong {
+  background-color: rgba(255, 255, 255, 0.9);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.dashed-line {
+  border-color: var(--blue-line);
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--ok);
+  box-shadow: 0 0 0 3px var(--ok-soft);
+  flex: none;
+}
+
+.compare-line {
+  background-color: #ffffff;
+  box-shadow:
+    0 0 0 1px rgba(18, 22, 29, 0.2),
+    0 0 24px rgba(0, 132, 255, 0.28);
+}
+
+/* --------------------------------------------------------------------------
+   Dark-only utility classes used by the components, remapped for light mode.
+   Selectors are copied from globals.css so the specificity matches and this
+   unlayered file wins over @layer utilities.
+   -------------------------------------------------------------------------- */
+.bg-\[\#0e0d0c\] {
+  background-color: #eaf0f8;
+}
+
+.bg-\[\#151413\]\/85,
+.bg-black\/60 {
+  background-color: rgba(247, 250, 255, 0.72);
+  -webkit-backdrop-filter: blur(18px) saturate(1.25);
+  backdrop-filter: blur(18px) saturate(1.25);
+}
+
+.bg-\[\#f6f1e7\] {
+  background-color: #ffffff;
+}
+
+.bg-white\/\[0\.02\] {
+  background-color: rgba(18, 22, 29, 0.02);
+}
+
+.bg-white\/15 {
+  background-color: var(--line-strong);
+}
+
+.ring-white\/\[0\.05\] {
+  --tw-ring-color: var(--line);
+}
+
+.border-\[rgb\(239_233_222\/0\.18\)\] {
+  border-color: var(--line-strong);
+}
+
+.focus-visible\:ring-white\/30:focus-visible,
+.focus-visible\:ring-white\/40:focus-visible {
+  --tw-ring-color: rgba(0, 132, 255, 0.5);
+}
+
+.hover\:bg-white\/\[0\.08\]:hover {
+  background-color: rgba(18, 22, 29, 0.05);
+}
+
+/* --------------------------------------------------------------------------
+   Spacing utilities missing from the prebuilt globals.css.
+   That stylesheet only contains the utilities the original template used, so
+   a few classes referenced by our components have no rule at all. Define the
+   ones we use here — this file is unlayered, so these win over globals.css.
+   -------------------------------------------------------------------------- */
+.space-y-2 > :not(:last-child) {
+  margin-block-end: calc(var(--spacing) * 2);
+}
+
+.space-y-3 > :not(:last-child) {
+  margin-block-end: calc(var(--spacing) * 3);
+}
+
+.space-y-3\.5 > :not(:last-child) {
+  margin-block-end: calc(var(--spacing) * 3.5);
+}
+
+.space-y-6 > :not(:last-child) {
+  margin-block-end: calc(var(--spacing) * 6);
+}
+
+.gap-2\.5 {
+  gap: calc(var(--spacing) * 2.5);
+}
+
+.gap-5 {
+  gap: calc(var(--spacing) * 5);
+}
+
+.pb-6 {
+  padding-bottom: calc(var(--spacing) * 6);
+}
+
+@media (min-width: 64rem) {
+  .lg\:pb-4 {
+    padding-bottom: calc(var(--spacing) * 4);
+  }
+}
+
+/* One third of the sidebar's full width: 1/3 of its content box + 2/3 of one side's padding. */
+.avatar-hero {
+  width: calc(33.3333% + var(--side-pad, 1.5rem) * 0.6667);
+  /* Cap the avatar so the stacked panel (below 1024px) doesn't grow a
+     half-screen portrait as the viewport widens. */
+  max-width: 12rem;
+  height: auto;
+  aspect-ratio: 1 / 1;
+}
+
+@media (min-width: 64rem) {
+  /* Sidebar rhythm: the intro scrolls (instead of overlapping the header and
+     footer) on short viewports, and centres with auto margins when there is room. */
+  .lg\:min-h-0 {
+    min-height: 0;
+  }
+
+  .lg\:overflow-y-auto {
+    overflow-y: auto;
+  }
+
+  .lg\:py-6 {
+    padding-block: calc(var(--spacing) * 6);
+  }
+
+  .lg\:my-auto {
+    margin-block: auto;
+  }
+}
+
+@media (min-width: 48rem) {
+  .md\:space-y-3\.5 > :not(:last-child) {
+    margin-block-end: calc(var(--spacing) * 3.5);
+  }
+
+  .md\:gap-5 {
+    gap: calc(var(--spacing) * 5);
+  }
+}
+
+/* Give the scrolling center area sideways bleed so the animated button glow
+   is not clipped at the panel edge, while keeping the content column width. */
+@media (min-width: 64rem) {
+  .panel-scroll-bleed {
+    margin-inline: calc(var(--spacing) * -16);
+    padding-inline: calc(var(--spacing) * 16);
+  }
+
+  .panel-cta-row {
+    padding-left: calc(var(--spacing) * 4);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Arrow fill button.
+   Plain CSS because the prebuilt globals.css cannot generate the arbitrary
+   utility classes used by the original component.
+   -------------------------------------------------------------------------- */
+.afb {
+  --afb-circle: 2rem;
+  --afb-right: 0.375rem;
+  --afb-inset-y: calc((100% - var(--afb-circle)) / 2);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.75rem;
+  padding: 0 calc(var(--afb-circle) + var(--afb-right) + 0.875rem) 0 1.125rem;
+  border: 1px solid var(--afb-bg);
+  border-radius: 999px;
+  background: var(--afb-bg);
+  color: var(--afb-text);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.afb--compact {
+  --afb-circle: 1.75rem;
+  --afb-right: 0.25rem;
+  height: 2.25rem;
+  padding-left: 0.75rem;
+  padding-right: calc(var(--afb-circle) + var(--afb-right) + 0.5rem);
+}
+
+.afb__label,
+.afb__text {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-left: 1.125rem;
+  padding-right: calc(var(--afb-circle) + var(--afb-right) + 0.875rem);
+  white-space: nowrap;
+}
+
+.afb__label {
+  position: relative;
+  z-index: 1;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.afb__icon {
+  display: inline-flex;
+  width: 0.9rem;
+  height: 0.9rem;
+  flex: none;
+}
+
+.afb__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.afb__fill {
+  position: absolute;
+  z-index: 2;
+  border-radius: 999px;
+  background: var(--afb-fill-bg);
+  inset: var(--afb-inset-y) var(--afb-right) var(--afb-inset-y)
+    calc(100% - var(--afb-right) - var(--afb-circle));
+  pointer-events: none;
+  transition: inset var(--afb-duration) cubic-bezier(0.785, 0.135, 0.15, 0.86),
+    background-color var(--afb-duration) cubic-bezier(0.785, 0.135, 0.15, 0.86);
+}
+
+.afb__text {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  color: var(--afb-fill-text);
+  clip-path: inset(
+    var(--afb-inset-y) var(--afb-right) var(--afb-inset-y)
+      calc(100% - var(--afb-right) - var(--afb-circle))
+  );
+  pointer-events: none;
+  transition: clip-path var(--afb-duration) cubic-bezier(0.785, 0.135, 0.15, 0.86),
+    color var(--afb-duration) cubic-bezier(0.785, 0.135, 0.15, 0.86);
+}
+
+.afb__circle {
+  position: absolute;
+  z-index: 3;
+  top: 50%;
+  right: var(--afb-right);
+  display: inline-flex;
+  width: var(--afb-circle);
+  height: var(--afb-circle);
+  transform: translateY(-50%);
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--afb-fill-bg);
+  color: var(--afb-arrow);
+  overflow: hidden;
+  pointer-events: none;
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+  mask-image: radial-gradient(white, black);
+  transition: background-color var(--afb-duration) cubic-bezier(0.785, 0.135, 0.15, 0.86),
+    color var(--afb-duration) cubic-bezier(0.785, 0.135, 0.15, 0.86);
+}
+
+.afb__arrow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: inline-flex;
+  width: 1.05rem;
+  height: 1.05rem;
+  transform-origin: center;
+  transition: transform var(--afb-duration) cubic-bezier(0.785, 0.135, 0.15, 0.86);
+}
+
+.afb__arrow svg {
+  width: 100%;
+  height: 100%;
+}
+
+.afb__arrow--in {
+  transform: translate(-170%, -50%) scale(0);
+}
+
+.afb__arrow--out {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.afb:hover .afb__fill,
+.afb[data-pressed='true'] .afb__fill {
+  inset: 0;
+  background: var(--afb-fill-bg-hover);
+}
+
+.afb:hover .afb__text,
+.afb[data-pressed='true'] .afb__text {
+  color: var(--afb-fill-text-hover);
+  clip-path: inset(0);
+}
+
+.afb:hover .afb__circle,
+.afb[data-pressed='true'] .afb__circle {
+  background: var(--afb-fill-bg-hover);
+  color: var(--afb-arrow-hover);
+}
+
+.afb:hover .afb__arrow--in,
+.afb[data-pressed='true'] .afb__arrow--in {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.afb:hover .afb__arrow--out,
+.afb[data-pressed='true'] .afb__arrow--out {
+  transform: translate(70%, -50%) scale(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .afb__fill,
+  .afb__text,
+  .afb__circle,
+  .afb__arrow {
+    transition: none;
+  }
+}
