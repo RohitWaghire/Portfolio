@@ -18,9 +18,9 @@ export const metadata: Metadata = {
     siteName: siteConfig.name,
     images: [
       {
-        url: '/opengraph-image.jpg',
-        width: 2400,
-        height: 1260,
+        url: '/opengraph-image.jpg?v=2',
+        width: 1200,
+        height: 630,
         alt: `${siteConfig.name}, ${siteConfig.headline}`,
         type: 'image/jpeg'
       }
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     creator: siteConfig.x.label,
     title: siteConfig.headline,
     description: siteConfig.description,
-    images: ['/twitter-image.jpg']
+    images: ['/twitter-image.jpg?v=2']
   }
 };
 
