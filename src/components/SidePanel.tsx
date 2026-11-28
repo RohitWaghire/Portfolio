@@ -95,7 +95,8 @@ export function SidePanel({
             alt=""
             width={288}
             height={288}
-            quality={95}
+            sizes="192px"
+            quality={85}
             priority
             className="avatar-hero rounded-full shadow-[0_0_0_1px_rgb(0_0_0/0.5),inset_0_1px_0_rgb(255_255_255/0.1)]"
           />

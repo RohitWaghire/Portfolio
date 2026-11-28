@@ -313,6 +313,10 @@ export function CanvasMask({ outside }: { outside?: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // The outer bloom is desktop-only; on mobile it is clipped and can become
+    // the largest paint, delaying LCP for a purely decorative effect.
+    if (window.matchMedia('(max-width: 767px)').matches) return;
+
     const container = containerRef.current;
     const parent = container?.parentElement;
     if (!container || !parent) return;
@@ -384,7 +388,7 @@ export function CanvasMask({ outside }: { outside?: boolean }) {
     <div
       ref={containerRef}
       aria-hidden="true"
-      className="[container-type:size] pointer-events-none absolute z-20 overflow-hidden [mask-size:100%_100%] opacity-0 [mix-blend-mode:multiply] transition-opacity duration-500"
+      className="hidden [container-type:size] pointer-events-none absolute z-20 overflow-hidden [mask-size:100%_100%] opacity-0 [mix-blend-mode:multiply] transition-opacity duration-500 md:block"
       style={{ inset: -56 }}
     >
       <div className="flow-turn" />

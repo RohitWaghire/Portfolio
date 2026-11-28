@@ -649,3 +649,17 @@ body::after {
     transition: none;
   }
 }
+
+/* On phones the panel is the first meaningful paint: show it immediately
+   instead of fading in, and keep the decorative headline static. */
+@media (max-width: 767px) {
+  [data-panel] .rise {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .glow-text {
+    animation: none;
+  }
+}

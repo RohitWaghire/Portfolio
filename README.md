@@ -103,26 +103,29 @@ silently dropping submissions.
 
 ### 6. Images and social cards
 
-All placeholders come from one script; regenerate after editing it:
+Project media lives in `public/projects/project-XX/`:
 
-```bash
-python scripts/generate-placeholders.py
-```
+| File | Used for |
+| --- | --- |
+| `cover.webp` | Still cover when a project has no video |
+| `poster.webp` + `poster-640.webp` | Poster before playback and the LCP image |
+| `tile.mp4` | 8-second hover preview |
+| `full.mp4` | Full-screen project modal |
 
-It writes the 15 project covers, the avatar, favicons, the Open Graph / Twitter cards and the
-before/after screens. You can also skip it and simply drop your own files over the same paths
-in `public/`.
+The cards reference `poster-640.webp`, `cover-640.webp` and `cover-960.webp` through
+`srcset`, so add those smaller WebP variants whenever you add a project.
 
-Replace these by hand for the identity bits:
+Identity assets:
 
 | File | Where it shows |
 | --- | --- |
 | `public/avatar.webp` | Panel avatar (square, 320px+) |
-| `public/opengraph-image.jpg` / `public/twitter-image.jpg` | Link previews (2400×1260) |
+| `public/opengraph-image.jpg` / `public/twitter-image.jpg` | Link previews (1200×630) |
+| `src/app/icon.svg` | Browser tab favicon |
+| `src/app/apple-icon.png` | Apple touch icon (180×180) |
 
-Favicons are intentionally unset. To add one, drop `icon.png` into `src/app/`
-(Next picks it up automatically) or add an `icons` block back to the metadata in
-`src/app/layout.tsx`.
+> `scripts/generate-placeholders.py` overwrites the real project media and avatar. Do not run
+> it on this copy of the site.
 
 ### 7. Colours and theme — `src/app/theme.css`
 

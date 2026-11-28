@@ -1,14 +1,61 @@
 'use client';
 
-import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react';
+import React, {
+  useRef,
+  useEffect,
+  useLayoutEffect,
+  useState,
+  useMemo,
+  useCallback
+} from 'react';
+import dynamic from 'next/dynamic';
 import { PROJECTS } from '@/data/projects';
 import { Project } from '@/types';
-import { ProjectModal } from './ProjectModal';
 import { cn } from '@/lib/utils';
+
+// The modal is only needed after a card is opened; keep it out of first load.
+const ProjectModal = dynamic(
+  () => import('./ProjectModal').then((mod) => mod.ProjectModal),
+  { ssr: false }
+);
 
 const OFFSETS = [0, 4, 8, 2, 10, 6];
 const mod = (e: number, t: number) => ((e % t) + t) % t;
 const colShift = (width: number, col: number) => mod(col, 2) * Math.round(0.3 * width);
+
+/** Card width used by the layout, described for responsive image selection. */
+const CARD_SIZES = '(max-width: 428px) 84vw, (max-width: 767px) 360px, 520px';
+
+/** `/poster.webp?v=2` -> `/poster-640.webp?v=2` */
+const widthVariant = (url: string, width: number) =>
+  url.replace(/\.webp(\?.*)?$/, `-${width}.webp$1`);
+
+// Initial centring must happen before paint, but layout effects warn during SSR.
+const useIsomorphicLayoutEffect =
+  typeof window !== 'undefined' ? useLayoutEffect : useEffect;
+
+// Touch screens have no hover, so at most one visible preview plays at a time.
+const touchVisible = new Set<HTMLVideoElement>();
+let touchPlaying: HTMLVideoElement | null = null;
+
+const claimTouchPreview = (el: HTMLVideoElement) => {
+  touchVisible.add(el);
+  if (touchPlaying) return;
+  touchPlaying = el;
+  el.play().catch(() => {});
+};
+
+const releaseTouchPreview = (el: HTMLVideoElement) => {
+  touchVisible.delete(el);
+  if (touchPlaying !== el) return;
+  el.pause();
+  touchPlaying = null;
+  const next = touchVisible.values().next().value;
+  if (next) {
+    touchPlaying = next;
+    next.play().catch(() => {});
+  }
+};
 
 interface CardItem {
   project: number;
@@ -35,6 +82,8 @@ function Card({
   project,
   active,
   empty,
+  eager,
+  highPriority,
   isDragged,
   onOpen
 }: {
@@ -42,19 +91,25 @@ function Card({
   project: Project;
   active: boolean;
   empty: boolean;
+  eager?: boolean;
+  highPriority?: boolean;
   isDragged: React.MutableRefObject<boolean>;
   onOpen: () => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
   const { cover, video } = project;
+  const poster = video?.poster;
 
   // Preview clips play on hover only, so a wall of cards does not animate at
-  // once. Touch screens have no hover, so there we fall back to visibility.
+  // once. Touch screens have no hover, so one mostly-visible card plays after
+  // the first interaction — never competing with the LCP poster on load.
   useEffect(() => {
     const el = videoRef.current;
     if (!el) return;
     if (!active) {
       el.pause();
+      releaseTouchPreview(el);
       return;
     }
 
@@ -63,19 +118,53 @@ function Card({
       return;
     }
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          el.play().catch(() => {});
-        } else {
-          el.pause();
-        }
-      },
-      { threshold: 0.2 }
-    );
+    const interactionEvents = [
+      'pointerdown',
+      'touchstart',
+      'wheel',
+      'keydown',
+      'scroll'
+    ] as const;
+    let observer: IntersectionObserver | null = null;
+    let started = false;
+    let cancelled = false;
 
-    observer.observe(el);
-    return () => observer.disconnect();
+    const start = () => {
+      if (started || cancelled) return;
+      started = true;
+      observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) claimTouchPreview(el);
+          else releaseTouchPreview(el);
+        },
+        { threshold: 0.55 }
+      );
+      observer.observe(el);
+    };
+
+    const removeListeners = () => {
+      interactionEvents.forEach((event) => window.removeEventListener(event, onFirst));
+    };
+
+    const onFirst = () => {
+      removeListeners();
+      start();
+    };
+
+    if (navigator.userActivation?.hasBeenActive) start();
+    else {
+      interactionEvents.forEach((event) =>
+        window.addEventListener(event, onFirst, { once: true, passive: true })
+      );
+    }
+
+    return () => {
+      cancelled = true;
+      removeListeners();
+      observer?.disconnect();
+      el.pause();
+      releaseTouchPreview(el);
+    };
   }, [active]);
 
   const playPreview = () => {
@@ -121,24 +210,51 @@ function Card({
         )}
       >
         {video ? (
-          <video
-            ref={videoRef}
-            src={video.tile}
-            poster={video.poster}
-            muted
-            loop
-            playsInline
-            preload="none"
-            draggable={false}
-            className="absolute inset-0 size-full object-cover"
-          />
+          <>
+            <video
+              ref={videoRef}
+              src={video.tile}
+              muted
+              loop
+              playsInline
+              preload="none"
+              draggable={false}
+              onPlaying={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
+              onEnded={() => setIsPlaying(false)}
+              className="absolute inset-0 size-full object-cover"
+            />
+            {/* Responsive poster sits above the video until playback starts. */}
+            {poster && (
+              <img
+                src={poster}
+                srcSet={`${widthVariant(poster, 640)} 640w, ${poster} 960w`}
+                sizes={CARD_SIZES}
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+                decoding="async"
+                loading={eager ? 'eager' : 'lazy'}
+                fetchPriority={highPriority ? 'high' : 'auto'}
+                className={cn(
+                  'absolute inset-0 size-full object-cover transition-opacity duration-300',
+                  isPlaying ? 'opacity-0' : 'opacity-100'
+                )}
+              />
+            )}
+          </>
         ) : (
           /* No video yet, so show the cover image. Add `video` to the project in
              src/data/projects.ts (plus tile.mp4 / full.mp4) to switch it on. */
           <img
             src={cover}
+            srcSet={`${widthVariant(cover, 640)} 640w, ${widthVariant(cover, 960)} 960w, ${cover} 1900w`}
+            sizes={CARD_SIZES}
             alt=""
             draggable={false}
+            decoding="async"
+            loading={eager ? 'eager' : 'lazy'}
+            fetchPriority={highPriority ? 'high' : 'auto'}
             className="absolute inset-0 size-full object-cover"
           />
         )}
@@ -163,8 +279,17 @@ export function Playground() {
   const [layout, setLayout] = useState<LayoutData | null>(null);
   const [viewport, setViewport] = useState({ width: 0, height: 0, qx: 0, qy: 0 });
 
-  // Center initial view on the page load
+  // Warm the modal chunk on the first interaction, never during initial load.
   useEffect(() => {
+    const prefetch = () => {
+      void import('./ProjectModal');
+    };
+    window.addEventListener('pointerdown', prefetch, { once: true, passive: true });
+    return () => window.removeEventListener('pointerdown', prefetch);
+  }, []);
+
+  // Center the initial view before paint, so cards are never shown untransformed.
+  useIsomorphicLayoutEffect(() => {
     const container = containerRef.current;
     if (!layout || !container || hasInitialized.current) return;
     hasInitialized.current = true;
@@ -437,6 +562,8 @@ export function Playground() {
                 project={PROJECTS[card.project]}
                 active={activeProject === null}
                 empty={activeProject === card.project}
+                eager={card.project >= 4 && card.project <= 7}
+                highPriority={card.project >= 4 && card.project <= 7}
                 isDragged={isDragging}
                 onOpen={() => handleOpenProject(card.project)}
               />
