@@ -76,16 +76,16 @@ export const PROJECTS: Project[] = [
   },
   {
     slug: 'project-05',
-    title: 'Collective Wisdom',
-    category: 'AI platform',
-    year: '2025',
-    width: 1914,
-    height: 982,
-    cover: '/projects/project-05/cover.webp',
+    title: 'Phished',
+    category: 'Cybersecurity',
+    year: '2026',
+    width: 1602,
+    height: 790,
+    cover: '/projects/project-05/cover.webp?v=2',
     video: {
-      tile: '/projects/project-05/tile.mp4',
-      full: '/projects/project-05/full.mp4',
-      poster: '/projects/project-05/poster.webp'
+      tile: '/projects/project-05/tile.mp4?v=2',
+      full: '/projects/project-05/full.mp4?v=2',
+      poster: '/projects/project-05/poster.webp?v=2'
     }
   },
   {
